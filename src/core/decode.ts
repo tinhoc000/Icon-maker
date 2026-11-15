@@ -44,17 +44,26 @@ export function fitWithin(width: number, height: number, max: number): { w: numb
   return { w: Math.max(1, Math.round(width * scale)), h: Math.max(1, Math.round(height * scale)) };
 }
 
+/** Upright bitmap from the browser's own decoder. Older Safari rejects the orientation option. */
+async function nativeBitmap(file: Blob): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    return createImageBitmap(file);
+  }
+}
+
 async function toBitmap(file: Blob, kind: SourceKind): Promise<ImageBitmap> {
   if (kind === 'heic') {
     // Safari can decode HEIC itself, which is faster and lighter than the bundled decoder.
     try {
-      return await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return await nativeBitmap(file);
     } catch {
       const { heicTo } = await import('heic-to');
       return (await heicTo({ blob: file, type: 'bitmap' })) as ImageBitmap;
     }
   }
-  return createImageBitmap(file, { imageOrientation: 'from-image' });
+  return nativeBitmap(file);
 }
 
 function bitmapToPixels(bitmap: ImageBitmap): Pixels {

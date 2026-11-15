@@ -4,3 +4,5 @@ public/models
 .superpowers
 test-results
 playwright-report
+# Personal photos can carry location data; add a sample here only for local runs.
+tests/fixtures/*.heic
