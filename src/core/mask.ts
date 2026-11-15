@@ -84,6 +84,17 @@ export function paintDab(
 
 type Stroke = Map<number, Uint8Array>;
 
+function restoreTiles(m: Mask, stroke: Stroke): void {
+  const tilesAcross = Math.ceil(m.width / TILE);
+  for (const [key, saved] of stroke) {
+    const x0 = (key % tilesAcross) * TILE;
+    const y0 = Math.floor(key / tilesAcross) * TILE;
+    const w = Math.min(TILE, m.width - x0);
+    const h = saved.length / w;
+    for (let y = 0; y < h; y++) m.data.set(saved.subarray(y * w, (y + 1) * w), (y0 + y) * m.width + x0);
+  }
+}
+
 /**
  * Undo history for mask edits. Each stroke keeps only the original bytes of
  * the 64x64 tiles it touched, so memory stays small on phones.
@@ -131,15 +142,15 @@ export class MaskHistory {
   undo(m: Mask): boolean {
     const stroke = this.strokes.pop();
     if (!stroke) return false;
-    const tilesAcross = Math.ceil(m.width / TILE);
-    for (const [key, saved] of stroke) {
-      const x0 = (key % tilesAcross) * TILE;
-      const y0 = Math.floor(key / tilesAcross) * TILE;
-      const w = Math.min(TILE, m.width - x0);
-      const h = saved.length / w;
-      for (let y = 0; y < h; y++) m.data.set(saved.subarray(y * w, (y + 1) * w), (y0 + y) * m.width + x0);
-    }
+    restoreTiles(m, stroke);
     return true;
+  }
+
+  /** Throws away the stroke in progress (for example when a second finger lands to pinch), undoing its changes. */
+  cancelStroke(m: Mask): void {
+    const stroke = this.current;
+    this.current = null;
+    if (stroke) restoreTiles(m, stroke);
   }
 
   bytesHeld(): number {

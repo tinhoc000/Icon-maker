@@ -166,3 +166,36 @@ describe('compositeRegion', () => {
     expect(out[3]).toBe(255);
   });
 });
+
+describe('MaskHistory.cancelStroke', () => {
+  test('puts back everything the stroke changed and records nothing', () => {
+    const m = fullMask(200, 200);
+    const start = m.data.slice();
+    const h = new MaskHistory();
+    const rec = h.beginStroke();
+    paintDab(m, 30, 30, 8, 'erase', rec);
+    paintDab(m, 150, 150, 8, 'erase', rec);
+    expect(Array.from(m.data)).not.toEqual(Array.from(start));
+    h.cancelStroke(m);
+    expect(Array.from(m.data)).toEqual(Array.from(start));
+    expect(h.canUndo()).toBe(false);
+    expect(h.bytesHeld()).toBe(0);
+  });
+  test('earlier strokes stay undoable after a cancelled one', () => {
+    const m = fullMask(200, 200);
+    const h = new MaskHistory();
+    const first = h.beginStroke();
+    paintDab(m, 20, 20, 5, 'erase', first);
+    h.endStroke();
+    const afterFirst = m.data.slice();
+    const second = h.beginStroke();
+    paintDab(m, 100, 100, 5, 'erase', second);
+    h.cancelStroke(m);
+    expect(Array.from(m.data)).toEqual(Array.from(afterFirst));
+    expect(h.canUndo()).toBe(true);
+  });
+  test('with no stroke in progress it does nothing', () => {
+    const m = fullMask(10, 10);
+    expect(() => new MaskHistory().cancelStroke(m)).not.toThrow();
+  });
+});

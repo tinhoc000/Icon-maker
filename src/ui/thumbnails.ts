@@ -1,5 +1,7 @@
 import { drawPixels, h, smallOf } from './dom';
+import { shouldShare } from './deliver';
 import { createAddButton } from './dropzone';
+import { batchWarning } from './limits';
 import type { Picture, State, Store } from './store';
 
 const STATUS_TEXT: Record<Picture['status'], string> = {
@@ -23,7 +25,9 @@ export function createThumbnails(store: Store, onFiles: (files: File[]) => void)
   const title = h('h2', { class: 'strip-title' });
   const list = h('ul', { class: 'thumbs', 'aria-label': 'Pictures' });
   const add = createAddButton(onFiles);
-  const root = h('section', { class: 'strip', hidden: true }, title, h('div', { class: 'strip-row' }, list, add));
+  const warning = h('p', { class: 'card-msg', role: 'status', hidden: true });
+  const root = h('section', { class: 'strip', hidden: true }, title, h('div', { class: 'strip-row' }, list, add), warning);
+  const onPhone = shouldShare(navigator);
   const items = new Map<string, Item>();
 
   function build(p: Picture): Item {
@@ -67,6 +71,9 @@ export function createThumbnails(store: Store, onFiles: (files: File[]) => void)
   function update(state: State) {
     root.hidden = state.pictures.length === 0;
     title.textContent = `Pictures (${state.pictures.length})`;
+    const warn = batchWarning(state.pictures.length, onPhone);
+    warning.textContent = warn;
+    warning.hidden = warn === '';
     const seen = new Set<string>();
     state.pictures.forEach((p, index) => {
       seen.add(p.id);

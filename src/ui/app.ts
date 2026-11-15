@@ -9,6 +9,7 @@ import { openTouchUp } from './touchup';
 import { createPreview } from './preview';
 import { createSave, type SaveHandlers } from './save';
 import { createStore, toPictureData, type Store } from './store';
+import type { OutputFile } from '../core/types';
 import { createSteps, type StepHandlers } from './steps';
 import { createThumbnails } from './thumbnails';
 
@@ -167,6 +168,14 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
   // --- Saving -----------------------------------------------------------------------------------
   const nextFrame = () => new Promise<void>((resolve) => setTimeout(resolve, 30));
 
+  /** The share sheet needs a fresh tap (too long passed since the last one): files are ready, so ask for it. */
+  function offerTap(files: OutputFile[], doneText: string) {
+    save.say('The files are ready. Tap to open the share sheet.', {
+      label: 'Tap to save',
+      run: () => void deliver(files).then((r) => save.say(r === 'shared' || r === 'downloaded' ? doneText : '')),
+    });
+  }
+
   async function downloadOne() {
     const { pictures, selectedId, settings } = store.getState();
     const pic = pictures.find((p) => p.id === selectedId);
@@ -178,7 +187,8 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
       const files = renderOutputs(data, settings);
       const result = await deliver(files);
       const saved = files.length === 1 ? files[0]!.name : `${files.length} files`;
-      save.say(result === 'downloaded' ? `Saved ${saved}.` : '');
+      if (result === 'needs-tap') offerTap(files, `Saved ${saved}.`);
+      else save.say(result === 'downloaded' ? `Saved ${saved}.` : '');
     } catch (err) {
       save.say(`${pic.name}: ${err instanceof Error ? err.message : 'Could not save this picture'}`);
     }
@@ -196,12 +206,14 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
     await nextFrame();
     try {
       const { zip, name, failures } = buildDownloadAll(ready, settings, new Date(), prior);
-      const result = await deliver([{ name, data: zip, mime: 'application/zip' }]);
+      const zipFile = [{ name, data: zip, mime: 'application/zip' }];
+      const result = await deliver(zipFile);
       const left =
         failures.length > 0
           ? ` ${failures.length} picture(s) left out; the ZIP has NOT-INCLUDED.txt with the reasons.`
           : '';
-      save.say(result === 'cancelled' ? '' : `Saved ${name}.${left}`);
+      if (result === 'needs-tap') offerTap(zipFile, `Saved ${name}.${left}`);
+      else save.say(result === 'cancelled' ? '' : `Saved ${name}.${left}`);
     } catch (err) {
       save.say(err instanceof Error ? err.message : 'Could not build the ZIP');
     }

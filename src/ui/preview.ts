@@ -65,6 +65,7 @@ export function createPreview() {
       drawPixels(before, smallOf(pic.original));
     }
     if (!pic.original) {
+      drawnOriginal = null; // the canvas is about to be cleared, so the next picture must redraw it
       before.width = after.width = 1;
       note.textContent = pic.error ?? '';
       return;

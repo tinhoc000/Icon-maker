@@ -41,6 +41,10 @@ npm run build        # type-check and build into dist/
 - The design and the plan are in `docs/superpowers/specs` and `docs/superpowers/plans`.
 - The HEIC browser test runs only if you add a HEIC as `tests/fixtures/sample.heic`. That folder is
   git-ignored on purpose: phone photos can contain your location.
+- The model files are downloaded at build time and checked against `scripts/models.lock.json` (committed). After a
+  deliberate upgrade of `@imgly/background-removal`, review the change, then run `npm run models:lock` and commit the lock.
+- The page has a Content-Security-Policy (in `index.html`) so injected script cannot run or send data elsewhere.
+  If a new feature needs a new kind of resource, widen it there on purpose.
 - Test pages can reach the app's store as `window.__iconMaker` (like `window.__novaflow` in NovaFlow).
 
 ## Publish on GitHub Pages

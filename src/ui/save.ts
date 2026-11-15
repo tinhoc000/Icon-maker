@@ -36,6 +36,9 @@ export function createSave(store: Store, handlers: SaveHandlers) {
   one.addEventListener('click', () => handlers.onDownloadOne?.());
   all.addEventListener('click', () => handlers.onDownloadAll?.());
   const message = h('p', { class: 'card-msg', role: 'status', hidden: true });
+  const offer = h<HTMLButtonElement>('button', { type: 'button', class: 'btn btn-primary', hidden: true });
+  let offerRun: (() => void) | null = null;
+  offer.addEventListener('click', () => offerRun?.());
 
   const root = h(
     'section',
@@ -46,6 +49,7 @@ export function createSave(store: Store, handlers: SaveHandlers) {
     summary,
     h('div', { class: 'card-actions' }, one, all),
     message,
+    offer,
   );
 
   function update(state: State) {
@@ -61,9 +65,13 @@ export function createSave(store: Store, handlers: SaveHandlers) {
     all.disabled = ready.length === 0 || !handlers.onDownloadAll;
   }
 
-  function say(text: string) {
+  /** Shows a message; with an action, also a button (used when the share sheet needs a fresh tap). */
+  function say(text: string, action?: { label: string; run: () => void }) {
     message.hidden = text === '';
     message.textContent = text;
+    offerRun = action?.run ?? null;
+    offer.hidden = !action;
+    offer.textContent = action?.label ?? '';
   }
 
   return { el: root, update, say };

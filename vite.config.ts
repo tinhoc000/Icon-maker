@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
+import { isModelChunk, isModelManifest } from './src/pwa-caching';
 
 /**
  * The background-removal library bundles a copy of the ONNX runtime's wasm file that the app never
@@ -49,13 +50,20 @@ export default defineConfig({
         skipWaiting: true,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.includes('/models/'),
-            handler: 'CacheFirst',
+            // The file list is checked on the network first (falling back to the stored copy offline).
+            urlPattern: isModelManifest,
+            handler: 'NetworkFirst',
             options: {
               // Keep this name in step with MODEL_CACHE in src/core/segment.ts.
               cacheName: 'icon-maker-models',
+              networkTimeoutSeconds: 4,
               cacheableResponse: { statuses: [200] },
             },
+          },
+          {
+            urlPattern: isModelChunk,
+            handler: 'CacheFirst',
+            options: { cacheName: 'icon-maker-models', cacheableResponse: { statuses: [200] } },
           },
         ],
       },

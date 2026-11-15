@@ -119,7 +119,7 @@ export function createSteps(store: Store, handlers: StepHandlers) {
     const showCustom = customMode || !known;
     sizeSelect.value = showCustom ? 'custom' : String(s.size);
     custom.hidden = !showCustom;
-    custom.value = String(s.size);
+    if (document.activeElement !== custom) custom.value = String(s.size);
     padSelect.value = String(s.paddingPct);
     for (const e of [sizeSelect, custom, padSelect, cropBtn]) e.disabled = !s.makeIcon;
     iconCard.classList.toggle('is-off', !s.makeIcon);

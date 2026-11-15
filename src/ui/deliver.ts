@@ -1,6 +1,7 @@
 import type { OutputFile } from '../core/types';
 
-export type DeliverResult = 'shared' | 'downloaded' | 'cancelled';
+/** needs-tap: the browser refused to open the share sheet because too long passed since the last tap. */
+export type DeliverResult = 'shared' | 'downloaded' | 'cancelled' | 'needs-tap';
 
 export interface DeliverDeps {
   nav: { canShare?: (data: { files: File[] }) => boolean; share?: (data: { files: File[] }) => Promise<void> };
@@ -50,6 +51,7 @@ export async function deliver(files: OutputFile[], deps: DeliverDeps = defaults(
       return 'shared';
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return 'cancelled';
+      if (err instanceof Error && err.name === 'NotAllowedError') return 'needs-tap';
       // Anything else (for example the browser refusing a share after a long wait): download instead.
     }
   }

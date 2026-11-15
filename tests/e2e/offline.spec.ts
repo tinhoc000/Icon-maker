@@ -19,7 +19,7 @@ test('before the model is downloaded, offline says what to do and blocks the swi
   await page.reload();
   await expect(page.locator('.dropzone')).toBeVisible();
   await expect(toggle(page, 'Remove background').locator('input')).toBeDisabled();
-  await expect(page.locator('.card-msg').first()).toHaveText('Needs a one-time download. Connect to the internet once to set it up.');
+  await expect(page.locator('.steps .card-msg').first()).toHaveText('Needs a one-time download. Connect to the internet once to set it up.');
   // Plain conversion still works offline.
   await addPictures(page, [gearFile()]);
   await expect(page.locator('.thumb').first()).toHaveAttribute('data-status', 'done');

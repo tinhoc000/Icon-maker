@@ -124,6 +124,7 @@ export function openTouchUp(pic: Picture, onDone: (mask: Mask) => void): void {
 
   // ---- painting ----
   let stroke: { rec: StrokeRecorder; last: Point; pointerId: number } | null = null;
+  let changedBeforeStroke = false;
 
   function paintTo(points: Point[]) {
     if (!stroke) return;
@@ -137,6 +138,16 @@ export function openTouchUp(pic: Picture, onDone: (mask: Mask) => void): void {
       changed = true;
       refresh(dirty);
     }
+  }
+
+  /** A second finger landed: the first touch was the start of a pinch, not a brush stroke, so undo it. */
+  function cancelStroke() {
+    if (!stroke) return;
+    history.cancelStroke(edit);
+    stroke = null;
+    changed = changedBeforeStroke;
+    refresh(full);
+    undoBtn.disabled = !history.canUndo();
   }
 
   function endStroke() {
@@ -177,7 +188,7 @@ export function openTouchUp(pic: Picture, onDone: (mask: Mask) => void): void {
     viewport.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (e.pointerType === 'touch' && pointers.size === 2) {
-      endStroke();
+      cancelStroke();
       startGesture();
       return;
     }
@@ -189,6 +200,7 @@ export function openTouchUp(pic: Picture, onDone: (mask: Mask) => void): void {
     }
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const p = toImage(e.clientX, e.clientY);
+    changedBeforeStroke = changed;
     stroke = { rec: history.beginStroke(), last: p, pointerId: e.pointerId };
     paintTo([p]);
   });

@@ -76,3 +76,13 @@ describe('shouldShare', () => {
     expect(shouldShare({ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130', maxTouchPoints: 10 })).toBe(false);
   });
 });
+
+describe('deliver: share refused for lack of a fresh tap', () => {
+  test('NotAllowedError asks for another tap instead of a silent download', async () => {
+    const download = vi.fn();
+    const refused = Object.assign(new Error('needs a tap'), { name: 'NotAllowedError' });
+    const nav = { canShare: () => true, share: vi.fn().mockRejectedValue(refused) };
+    expect(await deliver(files, { nav, download, preferShare: true })).toBe('needs-tap');
+    expect(download).not.toHaveBeenCalled();
+  });
+});

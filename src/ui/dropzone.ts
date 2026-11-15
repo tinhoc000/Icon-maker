@@ -29,7 +29,13 @@ export function createDropzone(onFiles: (files: File[]) => void): HTMLElement {
     zone.classList.add('is-over');
   });
   zone.addEventListener('dragleave', () => zone.classList.remove('is-over'));
-  zone.addEventListener('drop', (e) => {
+  // A picture dropped anywhere on the page is added; otherwise the browser would open it and drop all work.
+  const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
+  window.addEventListener('dragover', (e) => {
+    if (hasFiles(e)) e.preventDefault();
+  });
+  window.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return;
     e.preventDefault();
     zone.classList.remove('is-over');
     give(e.dataTransfer?.files);

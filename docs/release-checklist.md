@@ -20,13 +20,26 @@ If it fails, tell the developer which device and photo. The engine sits behind o
 Background removal runs single-threaded on GitHub Pages (it cannot send the headers multi-threading needs),
 so expect it to be slower than on a PC.
 
-## 2. Everyday checks
+## 2. Memory and sharing limits (phones)
+
+The app keeps every open picture in memory (about 60 MB for a 12 MP photo), and a phone has far less memory than a PC.
+The app warns above 8 pictures; these checks decide whether that number is right.
+
+- [ ] Add **10 or more** full-size photos, convert them, then **Download all (ZIP)**. Note how many it handles before
+      the page reloads: ______. If it reloads below 8, tell the developer so the warning and the limits can change.
+- [ ] Add one **24 MP or 48 MP** photo (an iPhone Pro in full-resolution mode). It should open and convert.
+- [ ] **Download all** with 5 or more photos **from the Home Screen app**, not Safari: the share sheet opens
+      and Save to Files puts the ZIP in Files. If a **Tap to save** button appears instead, tap it; it must then open
+      the share sheet, and the message must not say "Saved" until you have saved.
+
+## 3. Everyday checks
 
 - [ ] **HEIC from Photos:** choose the HEIC; the thumbnail shows **Ready**; the line says "convert HEIC".
 - [ ] **Upright:** the portrait photo is the right way up in the preview and in the saved PNG.
 - [ ] **Remove background:** the subject is cut out; the "After" side shows a chequerboard behind it.
 - [ ] **Touch up with a finger:** Erase removes a leftover; Restore brings back a cut-off part; Undo works;
       pinch zooms; two fingers move the picture; Cancel leaves the result as it was.
+- [ ] **Pinching leaves no marks:** after pinching to zoom, the picture has no new holes and Undo is still greyed out.
 - [ ] **Touch up with Apple Pencil (iPad):** the same, with the Pencil.
 - [ ] **Crop:** drag the box and its corners with a finger; Apply changes the icon; Reset goes back to automatic.
 - [ ] **Make icon:** PNG, ICO and SVG saved at the size you chose; the SVG note is visible.
@@ -38,7 +51,7 @@ so expect it to be slower than on a PC.
       background card says it needs a one-time download and the switch is off.
 - [ ] Rotate the device: nothing is cut off, buttons are easy to tap.
 
-## 3. NovaFlow
+## 4. NovaFlow
 
 - [ ] Make an icon with Remove background and Make icon on; save the PNG.
 - [ ] In NovaFlow, add it as an equipment picture; it appears with a transparent background and looks sharp.
