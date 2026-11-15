@@ -2,6 +2,7 @@ import { decodeFile, isHeicFile } from '../core/decode';
 import { createSegmenter, ModelDownloadError } from '../core/segment';
 import { h } from './dom';
 import { createDropzone } from './dropzone';
+import { openCrop } from './crop';
 import { openTouchUp } from './touchup';
 import { createPreview } from './preview';
 import { createSave, type SaveHandlers } from './save';
@@ -120,6 +121,15 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
     onTouchUp: () => {
       const pic = store.getState().pictures.find((p) => p.id === store.getState().selectedId);
       if (pic?.mask) openTouchUp(pic, (mask) => store.updatePicture(pic.id, { mask }));
+    },
+    onCrop: () => {
+      const { pictures, selectedId, settings } = store.getState();
+      const pic = pictures.find((p) => p.id === selectedId);
+      if (pic?.original) openCrop(pic, settings, (crop) => store.updatePicture(pic.id, { crop }));
+    },
+    onResetCrop: () => {
+      const { selectedId } = store.getState();
+      if (selectedId) store.updatePicture(selectedId, { crop: null });
     },
     onRetryModel: () => {
       store.setModelState('unknown');

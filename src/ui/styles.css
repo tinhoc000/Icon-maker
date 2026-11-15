@@ -624,3 +624,67 @@ body.modal-open {
 .btn[aria-pressed='true'] {
   border-color: var(--accent);
 }
+
+/* ---- crop editor ---- */
+.cr-viewport {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.cr-wrap {
+  position: relative;
+  touch-action: none;
+}
+
+.cr-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cr-box {
+  position: absolute;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #000, 0 0 0 9999px rgb(0 0 0 / 0.5);
+  cursor: move;
+  touch-action: none;
+}
+
+.cr-box:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cr-handle {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+}
+
+.cr-handle::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.cr-handle[data-h='nw'] { left: 0; top: 0; cursor: nwse-resize; }
+.cr-handle[data-h='n'] { left: 50%; top: 0; cursor: ns-resize; }
+.cr-handle[data-h='ne'] { left: 100%; top: 0; cursor: nesw-resize; }
+.cr-handle[data-h='e'] { left: 100%; top: 50%; cursor: ew-resize; }
+.cr-handle[data-h='se'] { left: 100%; top: 100%; cursor: nwse-resize; }
+.cr-handle[data-h='s'] { left: 50%; top: 100%; cursor: ns-resize; }
+.cr-handle[data-h='sw'] { left: 0; top: 100%; cursor: nesw-resize; }
+.cr-handle[data-h='w'] { left: 0; top: 50%; cursor: ew-resize; }
+
+.cr-info {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
