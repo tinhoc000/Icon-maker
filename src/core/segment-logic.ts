@@ -7,8 +7,8 @@ import type { Mask, Pixels } from './types';
 export type Engine = (input: Pixels) => Promise<Mask>;
 
 export class SegmentError extends Error {
-  constructor(message = 'Not enough memory to remove this background') {
-    super(message);
+  constructor(message = 'Not enough memory to remove this background', cause?: unknown) {
+    super(message, { cause });
     this.name = 'SegmentError';
   }
 }
@@ -26,17 +26,18 @@ export async function segmentWith(
   opts: { inputLongSide?: number } = {},
 ): Promise<Mask> {
   const first = opts.inputLongSide ?? MODEL_INPUT_SIDE;
+  let lastError: unknown;
   for (const side of [first, Math.max(1, Math.round(first / 2))]) {
     const { w, h } = fitWithin(p.width, p.height, side);
     const input = w === p.width && h === p.height ? p : resize(p, w, h);
     try {
       const mask = await engine(input);
       return resizeMask(mask, p.width, p.height);
-    } catch {
-      // fall through to the smaller attempt
+    } catch (err) {
+      lastError = err; // try once more, smaller
     }
   }
-  throw new SegmentError();
+  throw new SegmentError(undefined, lastError);
 }
 
 /**

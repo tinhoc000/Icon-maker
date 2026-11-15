@@ -12,6 +12,8 @@ export const MODEL_CACHE = 'icon-maker-models';
 export const DOWNLOAD_FAILED =
   'Background removal needs a one-time download. Check your connection and try again.';
 
+export const OFFLINE_MESSAGE = 'Needs a one-time download. Connect to the internet once to set it up.';
+
 /** The model files could not be fetched. Convert and Make icon still work. */
 export class ModelDownloadError extends Error {
   constructor() {

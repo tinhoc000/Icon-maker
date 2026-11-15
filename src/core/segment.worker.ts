@@ -51,8 +51,12 @@ function configFor(publicPath: string): Config {
 }
 
 const engine: Engine = async (input: Pixels) => {
-  const image = new ImageData(new Uint8ClampedArray(input.data), input.width, input.height);
-  const blob = await segmentForeground(image, config!);
+  // The library's types allow ImageData, but its code only converts Blobs (an ImageData would
+  // crash it), so hand it raw RGBA tagged with the picture's size.
+  const source = new Blob([input.data as BlobPart], {
+    type: `image/x-rgba8;width=${input.width};height=${input.height}`,
+  });
+  const blob = await segmentForeground(source, config!);
   return alphaFromEngineOutput(new Uint8Array(await blob.arrayBuffer()), input.width, input.height);
 };
 
@@ -75,6 +79,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     send({ id, type: 'done', width: mask.width, height: mask.height, data: out }, [out]);
   } catch (err) {
     const message = err instanceof SegmentError ? err.message : String(err);
+    console.error('Background removal failed:', err instanceof SegmentError ? err.cause : err);
     send({ id, type: 'error', kind: 'memory', message });
   }
 };

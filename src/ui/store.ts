@@ -26,6 +26,8 @@ export interface State {
   selectedId: string | null;
   settings: Settings;
   modelState: ModelState;
+  /** False when the browser reports no connection. */
+  online: boolean;
 }
 
 export interface NewPicture {
@@ -44,6 +46,7 @@ export interface Store {
   setSettings(patch: Partial<Settings>): void;
   updatePicture(id: string, patch: Partial<Picture>): void;
   setModelState(m: ModelState): void;
+  setOnline(online: boolean): void;
 }
 
 /** The part of a picture the pipeline needs, or null while it has no pixels. */
@@ -52,7 +55,7 @@ export function toPictureData(p: Picture): PictureData | null {
 }
 
 export function createStore(): Store {
-  let state: State = { pictures: [], selectedId: null, settings: { ...DEFAULT_SETTINGS }, modelState: 'unknown' };
+  let state: State = { pictures: [], selectedId: null, settings: { ...DEFAULT_SETTINGS }, modelState: 'unknown', online: true };
   const listeners = new Set<(s: State) => void>();
   let counter = 0;
 
@@ -109,6 +112,10 @@ export function createStore(): Store {
 
     setModelState(modelState) {
       set({ ...state, modelState });
+    },
+
+    setOnline(online) {
+      set({ ...state, online });
     },
   };
 }

@@ -59,6 +59,10 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
       const mask = await segmenter.removeBackground(pic.original, (e) => {
         if (e.stage === 'download' && e.fraction < 1 && store.getState().modelState !== 'downloading') {
           store.setModelState('downloading');
+        } else if (e.stage === 'inference' && store.getState().modelState !== 'ready') {
+          // The model is loaded once inference starts, so the download message should go away.
+          store.setModelState('ready');
+          void keepStorage();
         }
         store.updatePicture(id, {
           stage: e.stage === 'download' ? 'Downloading model' : 'Removing background',
@@ -66,6 +70,7 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
         });
       });
       store.setModelState('ready');
+      void keepStorage();
       store.updatePicture(id, { mask, status: 'done', stage: undefined, progress: undefined, error: undefined });
     } catch (err) {
       if (err instanceof ModelDownloadError) {
@@ -106,6 +111,26 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
       pumping = false;
     }
   }
+
+  /** Asks the browser not to evict the cached model when storage runs low. Harmless if refused. */
+  let storageRequested = false;
+  async function keepStorage() {
+    if (storageRequested) return;
+    storageRequested = true;
+    try {
+      await navigator.storage?.persist?.();
+    } catch {
+      // not available in this browser; the cache still works
+    }
+  }
+
+  // Know up front whether the model is already on this device, and follow the connection.
+  void segmenter.modelReady().then((ready) => {
+    if (ready && store.getState().modelState === 'unknown') store.setModelState('ready');
+  });
+  store.setOnline(navigator.onLine);
+  window.addEventListener('online', () => store.setOnline(true));
+  window.addEventListener('offline', () => store.setOnline(false));
 
   let lastRemove = store.getState().settings.removeBackground;
   store.subscribe((state) => {
@@ -191,6 +216,11 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
       { class: 'app-main' },
       h('div', { class: 'intake' }, dropzone, thumbs.el),
       h('div', { class: 'workspace' }, preview.el, h('div', { class: 'controls' }, steps.el, save.el)),
+      h(
+        'p',
+        { class: 'app-footer' },
+        'Your pictures never leave this device. Works offline after the first visit. On iPhone or iPad: tap Share, then Add to Home Screen.',
+      ),
     ),
   );
 

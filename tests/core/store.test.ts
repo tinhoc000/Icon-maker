@@ -103,3 +103,15 @@ describe('subscriptions', () => {
     expect(seen).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('connection', () => {
+  test('starts online and announces changes', () => {
+    const store = createStore();
+    expect(store.getState().online).toBe(true);
+    const seen = vi.fn();
+    store.subscribe(seen);
+    store.setOnline(false);
+    expect(store.getState().online).toBe(false);
+    expect(seen).toHaveBeenCalledTimes(1);
+  });
+});

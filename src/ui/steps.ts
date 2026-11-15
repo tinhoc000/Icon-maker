@@ -1,5 +1,5 @@
 import { PADDING_CHOICES, SIZE_CHOICES, SIZE_MAX, SIZE_MIN } from '../core/types';
-import { DOWNLOAD_FAILED } from '../core/segment';
+import { DOWNLOAD_FAILED, OFFLINE_MESSAGE } from '../core/segment';
 import { h } from './dom';
 import type { State, Store } from './store';
 
@@ -132,8 +132,16 @@ export function createSteps(store: Store, handlers: StepHandlers) {
     resetCrop.hidden = !(s.makeIcon && pic?.crop);
 
     const failed = state.modelState === 'failed';
-    modelMsg.hidden = !(failed || state.modelState === 'downloading');
-    modelMsg.textContent = failed ? DOWNLOAD_FAILED : 'Downloading the background-removal model (one time)…';
+    const downloading = state.modelState === 'downloading';
+    // Offline and the model was never stored: say so before the person tries.
+    const needsConnection = !state.online && state.modelState !== 'ready';
+    bg.input.disabled = needsConnection && !s.removeBackground;
+    modelMsg.hidden = !(failed || downloading || needsConnection);
+    modelMsg.textContent = failed
+      ? DOWNLOAD_FAILED
+      : downloading
+        ? 'Downloading the background-removal model (one time)…'
+        : OFFLINE_MESSAGE;
     retry.hidden = !failed;
   }
 

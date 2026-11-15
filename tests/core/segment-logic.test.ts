@@ -77,3 +77,14 @@ describe('alphaFromEngineOutput', () => {
     expect(() => alphaFromEngineOutput(new Uint8Array(5), 2, 1)).toThrow();
   });
 });
+
+describe('SegmentError cause', () => {
+  test('keeps the last error the engine threw, so the real reason is not lost', async () => {
+    const engine: Engine = async () => {
+      throw new Error('session failed: bad input shape');
+    };
+    const err = await segmentWith(engine, solid(100, 100, [0, 0, 0, 255])).catch((e) => e);
+    expect(err).toBeInstanceOf(SegmentError);
+    expect(String((err as SegmentError).cause)).toContain('session failed: bad input shape');
+  });
+});
