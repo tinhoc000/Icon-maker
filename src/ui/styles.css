@@ -518,3 +518,109 @@ button:focus-visible,
     max-height: 36vh;
   }
 }
+
+/* ---- touch-up editor ---- */
+body.modal-open {
+  overflow: hidden;
+}
+
+.touchup {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  outline: none;
+}
+
+.tu-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px var(--gutter);
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.tu-bar:last-of-type {
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.tu-spacer {
+  flex: 1;
+}
+
+.tu-tool[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.tu-size-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tu-size {
+  width: 120px;
+  min-height: 44px;
+}
+
+.tu-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+  background-color: var(--check-a);
+  background-image: conic-gradient(var(--check-b) 25%, transparent 0 50%, var(--check-b) 0 75%, transparent 0);
+  background-size: 16px 16px;
+}
+
+.tu-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.tu-canvas {
+  display: block;
+}
+
+.tu-canvas.is-pixelated {
+  image-rendering: pixelated;
+}
+
+.tu-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #000;
+  pointer-events: none;
+}
+
+.tu-hint {
+  margin: 0;
+  padding: 6px var(--gutter);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.btn.is-active,
+.btn[aria-pressed='true'] {
+  border-color: var(--accent);
+}

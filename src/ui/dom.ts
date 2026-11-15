@@ -18,26 +18,31 @@ export function h<T extends HTMLElement = HTMLElement>(tag: string, attrs: Attrs
   return e;
 }
 
-const smallPictures = new WeakMap<Pixels, Pixels>();
-const smallMasks = new WeakMap<Mask, Mask>();
+const smallPictures = new WeakMap<Pixels, Map<number, Pixels>>();
+const smallMasks = new WeakMap<Mask, Map<string, Mask>>();
 
-/** A copy of the picture that fits within `side` px, cached, for previews and thumbnails. */
+/** A copy of the picture that fits within `side` px, cached per size, for previews and thumbnails. */
 export function smallOf(p: Pixels, side = 1024): Pixels {
-  let small = smallPictures.get(p);
+  let bySide = smallPictures.get(p);
+  if (!bySide) smallPictures.set(p, (bySide = new Map()));
+  let small = bySide.get(side);
   if (!small) {
     const { w, h } = fitWithin(p.width, p.height, side);
     small = w === p.width && h === p.height ? p : resize(p, w, h);
-    smallPictures.set(p, small);
+    bySide.set(side, small);
   }
   return small;
 }
 
-/** The mask scaled to match smallOf(picture). */
+/** The mask scaled to match a small copy of its picture (cached per size). */
 export function smallMaskOf(m: Mask, small: Pixels): Mask {
-  let out = smallMasks.get(m);
-  if (!out || out.width !== small.width || out.height !== small.height) {
+  let bySize = smallMasks.get(m);
+  if (!bySize) smallMasks.set(m, (bySize = new Map()));
+  const key = small.width + 'x' + small.height;
+  let out = bySize.get(key);
+  if (!out) {
     out = resizeMask(m, small.width, small.height);
-    smallMasks.set(m, out);
+    bySize.set(key, out);
   }
   return out;
 }

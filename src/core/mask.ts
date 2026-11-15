@@ -148,3 +148,46 @@ export class MaskHistory {
     return total;
   }
 }
+
+/**
+ * Brush positions from `from` (already painted) to `to`, close enough together
+ * (a third of the radius, at least 1 px) that a fast drag leaves no gaps.
+ * A press without movement gives a single dab.
+ */
+export function dabPoints(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  radius: number,
+): { x: number; y: number }[] {
+  const dist = Math.hypot(to.x - from.x, to.y - from.y);
+  if (dist === 0) return [{ x: to.x, y: to.y }];
+  const spacing = Math.max(1, radius / 3);
+  const steps = Math.ceil(dist / spacing);
+  const points: { x: number; y: number }[] = [];
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    points.push({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t });
+  }
+  return points;
+}
+
+/**
+ * Writes the picture seen through the mask (RGB from `base`, alpha scaled by
+ * the mask) into `out` for one rectangle. `out` is RGBA, the same size as `base`.
+ */
+export function compositeRegion(base: Pixels, mask: Mask, out: Uint8ClampedArray, rect: Rect): void {
+  const x0 = Math.max(0, rect.x);
+  const y0 = Math.max(0, rect.y);
+  const x1 = Math.min(base.width, rect.x + rect.w);
+  const y1 = Math.min(base.height, rect.y + rect.h);
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = y * base.width + x;
+      const o = i * 4;
+      out[o] = base.data[o]!;
+      out[o + 1] = base.data[o + 1]!;
+      out[o + 2] = base.data[o + 2]!;
+      out[o + 3] = Math.round((base.data[o + 3]! * mask.data[i]!) / 255);
+    }
+  }
+}

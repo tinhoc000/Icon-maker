@@ -2,6 +2,7 @@ import { decodeFile, isHeicFile } from '../core/decode';
 import { createSegmenter, ModelDownloadError } from '../core/segment';
 import { h } from './dom';
 import { createDropzone } from './dropzone';
+import { openTouchUp } from './touchup';
 import { createPreview } from './preview';
 import { createSave, type SaveHandlers } from './save';
 import { createStore, type Store } from './store';
@@ -116,6 +117,10 @@ export function mountApp(root: HTMLElement, extra: { steps?: Partial<StepHandler
   const thumbs = createThumbnails(store, addFiles);
   const preview = createPreview();
   const steps = createSteps(store, {
+    onTouchUp: () => {
+      const pic = store.getState().pictures.find((p) => p.id === store.getState().selectedId);
+      if (pic?.mask) openTouchUp(pic, (mask) => store.updatePicture(pic.id, { mask }));
+    },
     onRetryModel: () => {
       store.setModelState('unknown');
       void pump();

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyMask, MaskHistory, paintDab, resizeMask } from '../../src/core/mask';
+import { applyMask, compositeRegion, dabPoints, MaskHistory, paintDab, resizeMask } from '../../src/core/mask';
 import { fullMask, px, solid } from './helpers';
 
 describe('applyMask', () => {
@@ -126,5 +126,43 @@ describe('MaskHistory', () => {
     paintDab(m, 32, 30, 4, 'erase', rec);
     h.endStroke();
     expect(h.bytesHeld()).toBe(64 * 64);
+  });
+});
+
+describe('dabPoints', () => {
+  test('a press without movement is one dab at that spot', () => {
+    expect(dabPoints({ x: 5, y: 5 }, { x: 5, y: 5 }, 10)).toEqual([{ x: 5, y: 5 }]);
+  });
+  test('points follow the line, end on the target, and are never more than a third of the radius apart', () => {
+    const pts = dabPoints({ x: 0, y: 0 }, { x: 100, y: 0 }, 9);
+    expect(pts[pts.length - 1]).toEqual({ x: 100, y: 0 });
+    expect(pts[0]!.x).toBeGreaterThan(0); // the start was already painted by the previous event
+    let last = 0;
+    for (const p of pts) {
+      expect(p.y).toBe(0);
+      expect(p.x - last).toBeLessThanOrEqual(3 + 1e-9);
+      last = p.x;
+    }
+  });
+  test('a tiny radius still advances at least one pixel per dab', () => {
+    const pts = dabPoints({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5);
+    expect(pts.length).toBeLessThanOrEqual(10);
+  });
+});
+
+describe('compositeRegion', () => {
+  test('writes colour and mask-scaled alpha only inside the rectangle', () => {
+    const base = solid(4, 1, [10, 20, 30, 200]);
+    const mask = { width: 4, height: 1, data: new Uint8Array([255, 0, 128, 255]) };
+    const out = new Uint8ClampedArray(16).fill(7);
+    compositeRegion(base, mask, out, { x: 1, y: 0, w: 2, h: 1 });
+    expect(Array.from(out)).toEqual([7, 7, 7, 7, 10, 20, 30, 0, 10, 20, 30, 100, 7, 7, 7, 7]);
+  });
+  test('a rectangle partly outside the picture is clipped, not an error', () => {
+    const base = solid(2, 2, [1, 1, 1, 255]);
+    const mask = fullMask(2, 2);
+    const out = new Uint8ClampedArray(16);
+    expect(() => compositeRegion(base, mask, out, { x: -3, y: -3, w: 10, h: 10 })).not.toThrow();
+    expect(out[3]).toBe(255);
   });
 });
