@@ -67,9 +67,10 @@ export function buildDownloadAll(
   pics: PictureData[],
   s: Settings,
   date: Date,
+  prior: Failure[] = [],
 ): { zip: Uint8Array; name: string; failures: Failure[] } {
   const files: OutputFile[] = [];
-  const failures: Failure[] = [];
+  const failures: Failure[] = [...prior];
   for (const pic of pics) {
     try {
       files.push(...renderOutputs(pic, s));

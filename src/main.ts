@@ -1,2 +1,4 @@
-const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = '<h1>Icon Maker</h1>';
+import './ui/styles.css';
+import { mountApp } from './ui/app';
+
+mountApp(document.querySelector<HTMLDivElement>('#app')!);

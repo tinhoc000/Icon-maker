@@ -127,6 +127,15 @@ describe('buildDownloadAll', () => {
     expect(Object.keys(unzipSync(zip)).sort()).toEqual(['a-2.png', 'a.png']);
   });
 
+  test('failures from before rendering (unreadable files) are kept in the note', () => {
+    const prior = [{ picture: 'bad.heic', reason: "Couldn't read this file" }];
+    const { zip, failures } = buildDownloadAll([picture('a.jpg')], DEFAULT_SETTINGS, date, prior);
+    expect(failures).toEqual(prior);
+    const back = unzipSync(zip);
+    expect(strFromU8(back['NOT-INCLUDED.txt']!)).toContain('bad.heic');
+    expect(Object.keys(back)).toContain('a.png');
+  });
+
   test('no pictures gives an empty ZIP and no failures', () => {
     const { zip, failures } = buildDownloadAll([], DEFAULT_SETTINGS, date);
     expect(failures).toEqual([]);
